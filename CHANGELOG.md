@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/wsams/neuterm/compare/v1.0.0...v1.1.0) (2026-07-28)
+
+### Features
+
+* Updates to tabs ([6ffc1fe](https://github.com/wsams/neuterm/commit/6ffc1fe68e17054e30ff2d35cf0879ba1a664cf2))
+
 ## 1.0.0 (2026-07-28)
 
 ### Features
