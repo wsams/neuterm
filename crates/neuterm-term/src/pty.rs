@@ -122,10 +122,7 @@ impl PtySession {
         let child = pair.slave.spawn_command(cmd).context("spawn shell")?;
         drop(pair.slave);
 
-        let mut reader = pair
-            .master
-            .try_clone_reader()
-            .context("clone pty reader")?;
+        let mut reader = pair.master.try_clone_reader().context("clone pty reader")?;
         let writer = pair.master.take_writer().context("take pty writer")?;
         let writer = Arc::new(Mutex::new(Some(writer)));
         let master = Arc::new(RwLock::new(pair.master));
@@ -324,13 +321,7 @@ impl Perform for Performer {
         }
     }
 
-    fn csi_dispatch(
-        &mut self,
-        params: &Params,
-        intermediates: &[u8],
-        _ignore: bool,
-        action: char,
-    ) {
+    fn csi_dispatch(&mut self, params: &Params, intermediates: &[u8], _ignore: bool, action: char) {
         let nums: Vec<i64> = params.iter().map(|p| p[0] as i64).collect();
         let first = |default: u16| -> u16 {
             nums.first()
@@ -358,11 +349,7 @@ impl Perform for Performer {
             }
             if mode == 6 {
                 let snap = self.grid.read().snapshot();
-                let reply = format!(
-                    "\x1b[{};{}R",
-                    snap.cursor_row + 1,
-                    snap.cursor_col + 1
-                );
+                let reply = format!("\x1b[{};{}R", snap.cursor_row + 1, snap.cursor_col + 1);
                 self.reply(reply.as_bytes());
                 return;
             }

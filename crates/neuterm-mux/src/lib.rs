@@ -321,12 +321,7 @@ impl Mux {
             .get_mut(self.active_tab)
             .ok_or_else(|| anyhow::anyhow!("no active tab"))?;
         let active = tab.active_pane;
-        replace_leaf_with_split(
-            &mut tab.tree,
-            active,
-            new_id,
-            SplitDirection::Horizontal,
-        )?;
+        replace_leaf_with_split(&mut tab.tree, active, new_id, SplitDirection::Horizontal)?;
         tab.active_pane = new_id;
         // Store title on override for visibility in tab bar when focused
         if tab.title_override.is_none() {

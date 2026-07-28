@@ -135,7 +135,9 @@ impl Config {
         }
         if let Some(port) = self.ai.ollama.port {
             if port == 0 {
-                return Err(ConfigError::Validate("ai.ollama.port must be 1–65535".into()));
+                return Err(ConfigError::Validate(
+                    "ai.ollama.port must be 1–65535".into(),
+                ));
             }
         }
         match &self.scrollback.lines {

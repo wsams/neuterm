@@ -32,9 +32,7 @@ pub struct OllamaClient {
 impl OllamaClient {
     pub fn from_config(config: &Config) -> Result<Self, AiError> {
         let timeout = Duration::from_millis(config.ai.ollama.timeout_ms.max(1));
-        let http = reqwest::Client::builder()
-            .timeout(timeout)
-            .build()?;
+        let http = reqwest::Client::builder().timeout(timeout).build()?;
         Ok(Self {
             http,
             base_url: config.ollama_base_url(),
@@ -94,7 +92,11 @@ impl OllamaClient {
     }
 
     /// Stream chat tokens; callback receives each content chunk.
-    pub async fn chat_stream<F>(&self, messages: Vec<ChatMessage>, mut on_token: F) -> Result<String, AiError>
+    pub async fn chat_stream<F>(
+        &self,
+        messages: Vec<ChatMessage>,
+        mut on_token: F,
+    ) -> Result<String, AiError>
     where
         F: FnMut(&str),
     {
@@ -152,9 +154,7 @@ impl OllamaClient {
              LINE2: one short sentence of explanation\n\
              Never execute anything; only suggest.",
         );
-        let user = format!(
-            "OS: {os_hint}\nShell: {shell_hint}\nRequest: {question}"
-        );
+        let user = format!("OS: {os_hint}\nShell: {shell_hint}\nRequest: {question}");
         let content = self
             .chat(vec![
                 ChatMessage {

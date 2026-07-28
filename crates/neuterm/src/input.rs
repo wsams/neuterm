@@ -58,7 +58,9 @@ pub fn action_from_key(event: &KeyEvent, mods: ModifiersState) -> Option<Action>
             Key::Named(NamedKey::ArrowLeft) if shift && !alt => return Some(Action::TabMoveLeft),
             Key::Named(NamedKey::ArrowRight) if shift && !alt => return Some(Action::TabMoveRight),
             Key::Named(NamedKey::ArrowLeft) if alt && !shift => return Some(Action::PaneFocusLeft),
-            Key::Named(NamedKey::ArrowRight) if alt && !shift => return Some(Action::PaneFocusRight),
+            Key::Named(NamedKey::ArrowRight) if alt && !shift => {
+                return Some(Action::PaneFocusRight)
+            }
             Key::Named(NamedKey::ArrowUp) if alt => return Some(Action::PaneFocusUp),
             Key::Named(NamedKey::ArrowDown) if alt => return Some(Action::PaneFocusDown),
             Key::Named(NamedKey::ArrowLeft) if !shift && !alt => return Some(Action::TabPrev),

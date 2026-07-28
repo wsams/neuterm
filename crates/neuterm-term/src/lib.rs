@@ -2,9 +2,9 @@
 //!
 //! See `specs/architecture.md` and `specs/performance.md`.
 
+mod color;
 mod grid;
 mod pty;
-mod color;
 
 pub use color::{Color, NamedColor};
 pub use grid::{Cell, CellAttr, GridSnapshot, TerminalGrid};

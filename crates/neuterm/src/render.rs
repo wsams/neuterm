@@ -49,21 +49,10 @@ pub struct Selection {
 
 impl Selection {
     pub fn normalized(self) -> (u16, u16, u16, u16) {
-        let (r1, c1, r2, c2) = if (self.start_row, self.start_col) <= (self.end_row, self.end_col)
-        {
-            (
-                self.start_row,
-                self.start_col,
-                self.end_row,
-                self.end_col,
-            )
+        let (r1, c1, r2, c2) = if (self.start_row, self.start_col) <= (self.end_row, self.end_col) {
+            (self.start_row, self.start_col, self.end_row, self.end_col)
         } else {
-            (
-                self.end_row,
-                self.end_col,
-                self.start_row,
-                self.start_col,
-            )
+            (self.end_row, self.end_col, self.start_row, self.start_col)
         };
         (r1, c1, r2, c2)
     }
@@ -194,8 +183,7 @@ impl Renderer {
         self.split = parse_rgb(&c.split).unwrap_or(self.split);
         self.selection_bg = parse_rgb(&c.selection_bg).unwrap_or(self.selection_bg);
         self.selection_fg = parse_rgb(&c.selection_fg).unwrap_or(self.selection_fg);
-        self.focus_border =
-            parse_rgb(&self.theme.panes.focus_border).unwrap_or(self.cursor);
+        self.focus_border = parse_rgb(&self.theme.panes.focus_border).unwrap_or(self.cursor);
     }
 
     pub fn cell_size(&self) -> (f32, f32) {
@@ -236,10 +224,7 @@ impl Renderer {
         let x = x as u32;
         let y = y as u32;
         for region in self.hit_regions.iter().rev() {
-            if x >= region.x
-                && y >= region.y
-                && x < region.x + region.w
-                && y < region.y + region.h
+            if x >= region.x && y >= region.y && x < region.x + region.w && y < region.y + region.h
             {
                 return Some(region.target);
             }
@@ -270,17 +255,9 @@ impl Renderer {
     pub fn cols_rows_for_size(&self, width: u32, height: u32) -> (u16, u16) {
         let pad = &self.theme.window_padding;
         let inset = &self.theme.pane_inset;
-        let border = 2u32; // 1px stroke each side
-        let avail_w =
-            width.saturating_sub(inset.left + inset.right + border + pad.left + pad.right);
-        let avail_h = height.saturating_sub(
-            self.tab_bar_h
-                + inset.top
-                + inset.bottom
-                + border
-                + pad.top
-                + pad.bottom,
-        );
+        let avail_w = width.saturating_sub(inset.left + inset.right + pad.left + pad.right);
+        let avail_h =
+            height.saturating_sub(self.tab_bar_h + inset.top + inset.bottom + pad.top + pad.bottom);
         let cols = (avail_w / self.cell_w.max(1)).max(1) as u16;
         let rows = (avail_h / self.cell_h.max(1)).max(1) as u16;
         (cols, rows)
@@ -311,11 +288,11 @@ impl Renderer {
         let pane_w = width.saturating_sub(inset.left + inset.right);
         let pane_h = height.saturating_sub(self.tab_bar_h + inset.top + inset.bottom);
 
-        // Terminal cells sit inside the border with theme window padding.
-        let grid_x = pane_x + 1 + pad.left;
-        let grid_y = pane_y + 1 + pad.top;
-        let grid_w = pane_w.saturating_sub(2 + pad.left + pad.right);
-        let grid_h = pane_h.saturating_sub(2 + pad.top + pad.bottom);
+        // Terminal cells sit directly inside the themed window padding.
+        let grid_x = pane_x + pad.left;
+        let grid_y = pane_y + pad.top;
+        let grid_w = pane_w.saturating_sub(pad.left + pad.right);
+        let grid_h = pane_h.saturating_sub(pad.top + pad.bottom);
 
         self.content_layout = ContentLayout {
             x: grid_x,
@@ -345,7 +322,11 @@ impl Renderer {
         }
 
         if self.pulse > 0.0 {
-            let glow = [self.cursor[0], self.cursor[1], (self.cursor[2] as f32 * 0.6) as u8];
+            let glow = [
+                self.cursor[0],
+                self.cursor[1],
+                (self.cursor[2] as f32 * 0.6) as u8,
+            ];
             blend_rect(
                 pixels,
                 width,
@@ -373,9 +354,13 @@ impl Renderer {
         let active_bg = parse_rgb(&chrome.active_background).unwrap_or(lighten(self.bg, 1.2));
         let inactive_bg = parse_rgb(&chrome.inactive_background).unwrap_or(bar_bg);
         let active_fg = parse_rgb(&chrome.active_foreground).unwrap_or(self.fg);
-        let inactive_fg =
-            parse_rgb(&chrome.inactive_foreground).unwrap_or(darken(self.fg, 0.7));
+        let inactive_fg = parse_rgb(&chrome.inactive_foreground).unwrap_or(darken(self.fg, 0.7));
         let sep = parse_rgb(&chrome.separator_color).unwrap_or(self.split);
+        let active_shadow = darken(active_bg, 0.55);
+        let active_highlight = lighten(active_bg, 1.18);
+        let plus_bg = mix_rgb(self.focus_border, active_bg, 0.72);
+        let plus_fg = pick_contrast(plus_bg, self.bg, [245, 247, 250]);
+        let plus_shadow = darken(plus_bg, 0.45);
 
         let bar_h = self.tab_bar_h;
         fill_rect(pixels, width, bar_h, 0, 0, width, bar_h, bar_bg);
@@ -394,8 +379,23 @@ impl Renderer {
             let active = i == mux.active_tab;
             let label_w = label.chars().count() as u32 * self.cell_w;
             let tw = label_w + chrome.tab_padding.left + chrome.tab_padding.right;
-            let tw = tw.max(tab_h).min(width.saturating_sub(x + tab_h + chrome.gap + chrome.bar_padding.right));
+            let tw = tw
+                .max(tab_h)
+                .min(width.saturating_sub(x + tab_h + chrome.gap + chrome.bar_padding.right));
 
+            if active {
+                draw_shadow(
+                    pixels,
+                    width,
+                    bar_h,
+                    x,
+                    tab_y + 2,
+                    tw,
+                    tab_h,
+                    active_shadow,
+                    0.35,
+                );
+            }
             fill_rect(
                 pixels,
                 width,
@@ -406,6 +406,18 @@ impl Renderer {
                 tab_h,
                 if active { active_bg } else { inactive_bg },
             );
+            if active && tw > 2 {
+                fill_rect(
+                    pixels,
+                    width,
+                    bar_h,
+                    x + 1,
+                    tab_y,
+                    tw - 2,
+                    1,
+                    active_highlight,
+                );
+            }
             // Vertically center glyph row inside the chip using even tab_padding.
             let text_x = x + chrome.tab_padding.left;
             let text_y = tab_y + chrome.tab_padding.top;
@@ -431,26 +443,55 @@ impl Renderer {
         // + button: same height as tabs, square, evenly padded glyph.
         let plus_size = tab_h;
         let plus_x = x;
-        fill_rect(
+        draw_shadow(
             pixels,
             width,
             bar_h,
             plus_x,
-            tab_y,
+            tab_y + 2,
             plus_size,
             plus_size,
-            active_bg,
+            plus_shadow,
+            0.28,
         );
-        let plus_glyph_x = plus_x + (plus_size.saturating_sub(self.cell_w)) / 2;
-        let plus_glyph_y = tab_y + chrome.tab_padding.top;
-        self.draw_text(
+        fill_rect(
+            pixels, width, bar_h, plus_x, tab_y, plus_size, plus_size, plus_bg,
+        );
+        if plus_size > 2 {
+            fill_rect(
+                pixels,
+                width,
+                bar_h,
+                plus_x + 1,
+                tab_y,
+                plus_size - 2,
+                1,
+                lighten(plus_bg, 1.18),
+            );
+        }
+        let icon_thickness = (plus_size / 10).max(2);
+        let icon_len = (plus_size / 2).max(icon_thickness * 3);
+        let cx = plus_x + plus_size / 2;
+        let cy = tab_y + plus_size / 2;
+        fill_rect(
             pixels,
             width,
             bar_h,
-            plus_glyph_x,
-            plus_glyph_y,
-            "+",
-            active_fg,
+            cx.saturating_sub(icon_len / 2),
+            cy.saturating_sub(icon_thickness / 2),
+            icon_len,
+            icon_thickness,
+            plus_fg,
+        );
+        fill_rect(
+            pixels,
+            width,
+            bar_h,
+            cx.saturating_sub(icon_thickness / 2),
+            cy.saturating_sub(icon_len / 2),
+            icon_thickness,
+            icon_len,
+            plus_fg,
         );
         self.hit_regions.push(HitRect {
             x: plus_x,
@@ -495,10 +536,10 @@ impl Renderer {
             PaneNode::Leaf(id) => {
                 let focused = *id == active_pane;
                 let pad = &self.theme.window_padding;
-                let grid_x = x + 1 + pad.left;
-                let grid_y = y + 1 + pad.top;
-                let grid_w = w.saturating_sub(2 + pad.left + pad.right);
-                let grid_h = h.saturating_sub(2 + pad.top + pad.bottom);
+                let grid_x = x + pad.left;
+                let grid_y = y + pad.top;
+                let grid_w = w.saturating_sub(pad.left + pad.right);
+                let grid_h = h.saturating_sub(pad.top + pad.bottom);
 
                 // Fill pane background out to the border.
                 fill_rect(pixels, width, height, x, y, w, h, self.bg);
@@ -539,11 +580,18 @@ impl Renderer {
                     }
                 }
                 if focused {
-                    // When the pane sits flush under the tab bar, the bar separator
-                    // is already the top edge — skip a second top stroke.
+                    // Avoid outlining the outer window perimeter; reserve the focus
+                    // stroke for interior split edges only.
                     let flush_under_tabs = self.theme.pane_inset.top == 0
                         && self.theme.tabs.separator_height > 0
                         && y <= self.tab_bar_h;
+                    let root_x = self.theme.pane_inset.left;
+                    let root_y = self.tab_bar_h + self.theme.pane_inset.top;
+                    let root_w = width
+                        .saturating_sub(self.theme.pane_inset.left + self.theme.pane_inset.right);
+                    let root_h = height.saturating_sub(
+                        self.tab_bar_h + self.theme.pane_inset.top + self.theme.pane_inset.bottom,
+                    );
                     stroke_rect_sides(
                         pixels,
                         width,
@@ -554,10 +602,10 @@ impl Renderer {
                         h,
                         self.focus_border,
                         1,
-                        !flush_under_tabs, // top
-                        true,
-                        true,
-                        true,
+                        !flush_under_tabs && y > root_y, // top
+                        y + h < root_y + root_h,         // bottom
+                        x > root_x,                      // left
+                        x + w < root_x + root_w,         // right
                     );
                 }
             }
@@ -573,8 +621,19 @@ impl Renderer {
                         let left_w = ((w as f32) * ratio) as u32;
                         let right_w = w.saturating_sub(left_w + 2);
                         self.draw_pane_tree(
-                            pixels, width, height, mux, triggers, first, active_pane, x, y, left_w,
-                            h, config, selection,
+                            pixels,
+                            width,
+                            height,
+                            mux,
+                            triggers,
+                            first,
+                            active_pane,
+                            x,
+                            y,
+                            left_w,
+                            h,
+                            config,
+                            selection,
                         );
                         fill_rect(pixels, width, height, x + left_w, y, 2, h, self.split);
                         self.draw_pane_tree(
@@ -597,8 +656,19 @@ impl Renderer {
                         let top_h = ((h as f32) * ratio) as u32;
                         let bot_h = h.saturating_sub(top_h + 2);
                         self.draw_pane_tree(
-                            pixels, width, height, mux, triggers, first, active_pane, x, y, w,
-                            top_h, config, selection,
+                            pixels,
+                            width,
+                            height,
+                            mux,
+                            triggers,
+                            first,
+                            active_pane,
+                            x,
+                            y,
+                            w,
+                            top_h,
+                            config,
+                            selection,
                         );
                         fill_rect(pixels, width, height, x, y + top_h, w, 2, self.split);
                         self.draw_pane_tree(
@@ -893,7 +963,8 @@ fn load_fonts(preferred: &str) -> (Font, Font, String) {
         let Ok(data) = std::fs::read(path) else {
             continue;
         };
-        let Ok(regular) = Font::from_bytes(data.as_slice(), fontdue::FontSettings::default()) else {
+        let Ok(regular) = Font::from_bytes(data.as_slice(), fontdue::FontSettings::default())
+        else {
             continue;
         };
         if !looks_monospace(&regular, 14.0) {
@@ -957,7 +1028,10 @@ fn is_safe_mono_font_path(path: &Path) -> bool {
         }
     }
     matches!(
-        path.extension().and_then(|e| e.to_str()).map(|e| e.to_ascii_lowercase()).as_deref(),
+        path.extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e.to_ascii_lowercase())
+            .as_deref(),
         Some("ttf") | Some("otf")
     )
 }
@@ -1000,7 +1074,11 @@ fn font_candidates(preferred: &str) -> Vec<PathBuf> {
             // Prefer an exact family match by bubbling it to the front.
             let name = path
                 .file_name()
-                .map(|s| s.to_string_lossy().to_ascii_lowercase().replace(['-', ' '], ""))
+                .map(|s| {
+                    s.to_string_lossy()
+                        .to_ascii_lowercase()
+                        .replace(['-', ' '], "")
+                })
                 .unwrap_or_default();
             if !preferred_lower.is_empty() && name.contains(&preferred_lower) {
                 out.insert(0, path);
@@ -1110,12 +1188,38 @@ fn blend_rect(
             let i = ((py * width + px) * 4) as usize;
             if i + 3 < pixels.len() {
                 pixels[i] = ((pixels[i] as f32) * (1.0 - a) + rgb[0] as f32 * a) as u8;
-                pixels[i + 1] =
-                    ((pixels[i + 1] as f32) * (1.0 - a) + rgb[1] as f32 * a) as u8;
-                pixels[i + 2] =
-                    ((pixels[i + 2] as f32) * (1.0 - a) + rgb[2] as f32 * a) as u8;
+                pixels[i + 1] = ((pixels[i + 1] as f32) * (1.0 - a) + rgb[1] as f32 * a) as u8;
+                pixels[i + 2] = ((pixels[i + 2] as f32) * (1.0 - a) + rgb[2] as f32 * a) as u8;
             }
         }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn draw_shadow(
+    pixels: &mut [u8],
+    width: u32,
+    height: u32,
+    x: u32,
+    y: u32,
+    w: u32,
+    h: u32,
+    rgb: [u8; 3],
+    strength: f32,
+) {
+    blend_rect(pixels, width, height, x, y, w, h, rgb, strength);
+    if w > 4 {
+        blend_rect(
+            pixels,
+            width,
+            height,
+            x + 2,
+            y + h,
+            w - 4,
+            1,
+            rgb,
+            strength * 0.65,
+        );
     }
 }
 
@@ -1130,7 +1234,9 @@ fn stroke_rect(
     rgb: [u8; 3],
     thickness: u32,
 ) {
-    stroke_rect_sides(pixels, width, height, x, y, w, h, rgb, thickness, true, true, true, true);
+    stroke_rect_sides(
+        pixels, width, height, x, y, w, h, rgb, thickness, true, true, true, true,
+    );
 }
 
 fn stroke_rect_sides(
@@ -1227,6 +1333,27 @@ fn lighten(rgb: [u8; 3], factor: f32) -> [u8; 3] {
         (rgb[1] as f32 * factor).min(255.0) as u8,
         (rgb[2] as f32 * factor).min(255.0) as u8,
     ]
+}
+
+fn mix_rgb(a: [u8; 3], b: [u8; 3], t: f32) -> [u8; 3] {
+    let t = t.clamp(0.0, 1.0);
+    [
+        (a[0] as f32 * t + b[0] as f32 * (1.0 - t)) as u8,
+        (a[1] as f32 * t + b[1] as f32 * (1.0 - t)) as u8,
+        (a[2] as f32 * t + b[2] as f32 * (1.0 - t)) as u8,
+    ]
+}
+
+fn pick_contrast(bg: [u8; 3], dark: [u8; 3], light: [u8; 3]) -> [u8; 3] {
+    if luminance(bg) > 140.0 {
+        dark
+    } else {
+        light
+    }
+}
+
+fn luminance(rgb: [u8; 3]) -> f32 {
+    rgb[0] as f32 * 0.299 + rgb[1] as f32 * 0.587 + rgb[2] as f32 * 0.114
 }
 
 fn scale_rgb(rgb: [u8; 3], factor: f32) -> [u8; 3] {

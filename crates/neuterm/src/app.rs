@@ -194,10 +194,7 @@ impl NeuTermApp {
                     self.overlay = Some(OverlayState {
                         kind: OverlayKind::CommandHelp,
                         input: String::new(),
-                        body: format!(
-                            "Ask for a command (model {})",
-                            self.config.ai.ollama.model
-                        ),
+                        body: format!("Ask for a command (model {})", self.config.ai.ollama.model),
                         busy: false,
                     });
                 }
@@ -305,10 +302,11 @@ impl NeuTermApp {
                     return;
                 }
                 if ov.body.starts_with("Suggested:") {
-                    if let Some(cmd) = ov.body.lines().next().and_then(|l| {
-                        l.strip_prefix("Suggested:")
-                            .map(|s| s.trim().to_string())
-                    }) {
+                    if let Some(cmd) =
+                        ov.body.lines().next().and_then(|l| {
+                            l.strip_prefix("Suggested:").map(|s| s.trim().to_string())
+                        })
+                    {
                         let mut seq = vec![0x15]; // Ctrl+U
                         seq.extend(cmd.into_bytes());
                         let _ = self.mux.write_to_active(&seq);
@@ -327,12 +325,10 @@ impl NeuTermApp {
                 let ai = self.ai.clone();
                 let prompt = self.config.ai.command_help.system_prompt.clone();
                 let os_hint = std::env::consts::OS;
-                let shell_hint = self
-                    .config
-                    .term
-                    .shell
-                    .clone()
-                    .unwrap_or_else(|| std::env::var("SHELL").unwrap_or_else(|_| "bash".into()));
+                let shell_hint =
+                    self.config.term.shell.clone().unwrap_or_else(|| {
+                        std::env::var("SHELL").unwrap_or_else(|_| "bash".into())
+                    });
 
                 let result = self.runtime.block_on(async {
                     ai.suggest_command(&question, os_hint, &shell_hint, prompt.as_deref())
@@ -457,10 +453,7 @@ impl NeuTermApp {
 
     fn handle_click(&mut self) {
         // Hit regions are recorded in physical pixels (same space as CursorMoved).
-        match self
-            .renderer
-            .hit_test(self.cursor_pos.x, self.cursor_pos.y)
-        {
+        match self.renderer.hit_test(self.cursor_pos.x, self.cursor_pos.y) {
             Some(HitTarget::NewTab) => {
                 if let Err(err) = self.mux.new_tab() {
                     error!("new tab: {err}");
@@ -484,11 +477,7 @@ impl ApplicationHandler<AppEvent> for NeuTermApp {
         let attrs = Window::default_attributes()
             .with_title("NeuTerm")
             .with_inner_size(self.initial_window_size());
-        let window = Arc::new(
-            event_loop
-                .create_window(attrs)
-                .expect("create window"),
-        );
+        let window = Arc::new(event_loop.create_window(attrs).expect("create window"));
         let sb_context = SbContext::new(window.clone()).expect("softbuffer context");
         let surface = Surface::new(&sb_context, window.clone()).expect("softbuffer surface");
 
@@ -515,12 +504,7 @@ impl ApplicationHandler<AppEvent> for NeuTermApp {
         }
     }
 
-    fn window_event(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        _id: WindowId,
-        event: WindowEvent,
-    ) {
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::RedrawRequested => {
@@ -564,16 +548,14 @@ impl ApplicationHandler<AppEvent> for NeuTermApp {
                                 self.needs_redraw = true;
                             }
                             Key::Named(NamedKey::Space)
-                                if !self.modifiers.control_key()
-                                    && !self.modifiers.super_key() =>
+                                if !self.modifiers.control_key() && !self.modifiers.super_key() =>
                             {
                                 // Linux/XKB reports Space as NamedKey::Space.
                                 ov.input.push(' ');
                                 self.needs_redraw = true;
                             }
                             Key::Character(c)
-                                if !self.modifiers.control_key()
-                                    && !self.modifiers.super_key() =>
+                                if !self.modifiers.control_key() && !self.modifiers.super_key() =>
                             {
                                 ov.input.push_str(c);
                                 self.needs_redraw = true;
@@ -618,11 +600,15 @@ impl ApplicationHandler<AppEvent> for NeuTermApp {
                 match state {
                     ElementState::Pressed => {
                         // Tab bar hits take priority.
-                        if self.renderer.hit_test(self.cursor_pos.x, self.cursor_pos.y).is_some()
+                        if self
+                            .renderer
+                            .hit_test(self.cursor_pos.x, self.cursor_pos.y)
+                            .is_some()
                         {
                             self.handle_click();
-                        } else if let Some((col, row)) =
-                            self.renderer.pixel_to_cell(self.cursor_pos.x, self.cursor_pos.y)
+                        } else if let Some((col, row)) = self
+                            .renderer
+                            .pixel_to_cell(self.cursor_pos.x, self.cursor_pos.y)
                         {
                             self.selecting = true;
                             self.selection = Some(Selection {
