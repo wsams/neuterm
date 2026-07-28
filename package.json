@@ -14,11 +14,7 @@
   },
   "release": {
     "branches": [
-      {
-        "name": "main",
-        "channel": "alpha",
-        "prerelease": "alpha"
-      }
+      "main"
     ],
     "plugins": [
       [
