@@ -1,0 +1,32 @@
+[package]
+name = "neuterm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "NeuTerm — a fast, configurable terminal emulator"
+default-run = "neuterm"
+
+[[bin]]
+name = "neuterm"
+path = "src/main.rs"
+
+[dependencies]
+neuterm-config = { workspace = true }
+neuterm-term = { workspace = true }
+neuterm-mux = { workspace = true }
+neuterm-triggers = { workspace = true }
+neuterm-ai = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+winit = { workspace = true }
+softbuffer = { workspace = true }
+cosmic-text = { workspace = true }
+fontdue = { workspace = true }
+arboard = { workspace = true }
+parking_lot = { workspace = true }
+notify = { workspace = true }
+dirs = { workspace = true }
+uuid = { workspace = true }

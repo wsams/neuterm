@@ -1,0 +1,114 @@
+# NeuTerm default configuration
+# Docs: specs/configuration.md
+
+# Visual theme — swap the name (graphite | midnight) or inline a full object.
+theme: graphite
+
+window:
+  initial_cols: 120
+  initial_rows: 40
+  # Used when theme is a builtin name (overrides that theme's window_padding).
+  padding:
+    left: 8
+    right: 8
+    top: 8
+    bottom: 8
+
+font:
+  # Prefer a real installed monospace face. NeuTerm rejects proportional /
+  # variable fonts (fc-match often returns those for missing families).
+  family: "Adwaita Mono"
+  size: 14.0
+  ligatures: false
+
+# Terminal palette — overrides the builtin theme colors when theme is a name.
+colors:
+  foreground: "#a5a7aa"
+  background: "#25282e"
+  cursor: "#a5a6aa"
+  selection_fg: "#000000"
+  selection_bg: "#7d7d7d"
+  ansi:
+    - "#2e3239"
+    - "#be861b"
+    - "#2289b4"
+    - "#d1b06e"
+    - "#7d8fa4"
+    - "#a25795"
+    - "#5abfd5"
+    - "#a5a6aa"
+  brights:
+    - "#2e3239"
+    - "#bd851b"
+    - "#2289b4"
+    - "#d0af6e"
+    - "#7d8fa4"
+    - "#a25794"
+    - "#4ea7bb"
+    - "#a5a6aa"
+  split: "#a5a7aa"
+
+background:
+  image: null
+  overlay_color: "#25282e"
+  overlay_opacity: 0.90
+  filter:
+    brightness: 1.0
+    blur: 0.0
+    saturation: 1.0
+
+scrollback:
+  lines: 200000
+
+bell:
+  mode: pulse
+  audible: false
+
+term:
+  program: "xterm-256color"
+  shell: null
+  cwd: null
+
+tabs:
+  show_bar: true
+  hide_if_only_one: false
+  default_title_mode: process
+
+panes:
+  inactive_dim: 0.15
+
+keybindings:
+  bindings: []
+
+triggers:
+  enabled: true
+  rules:
+    - name: production-highlight
+      match: "(?i)\\b(production|prod|prd|critical)\\b"
+      match_type: regex
+      scope: line
+      style:
+        foreground: "#ffffff"
+        background: "#c0392b"
+
+plugins:
+  enabled: true
+  dirs: []
+
+ai:
+  enabled: false
+  ollama:
+    host: "127.0.0.1"
+    port: 11434
+    base_url: null
+    model: "llama3.2"
+    timeout_ms: 60000
+  command_help:
+    shortcut: "default"
+    system_prompt: null
+  chat:
+    title: "AI Chat"
+
+performance:
+  renderer: auto
+  vsync: true

@@ -1,0 +1,14 @@
+[package]
+name = "neuterm-config"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "YAML configuration for NeuTerm"
+
+[dependencies]
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+dirs = { workspace = true }
+tracing = { workspace = true }
