@@ -1,0 +1,24 @@
+name: Renovate
+
+on:
+  schedule:
+    # Every 3 hours (also allows a nightly pass).
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v46.1.21
+        with:
+          configurationFile: renovate.json
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          LOG_LEVEL: info
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}

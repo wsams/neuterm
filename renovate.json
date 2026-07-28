@@ -1,0 +1,51 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDigest",
+    ":automergeMinor"
+  ],
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 5,
+  "timezone": "America/Los_Angeles",
+  "schedule": ["at any time"],
+  "packageRules": [
+    {
+      "description": "Group Rust crate updates",
+      "matchManagers": ["cargo"],
+      "groupName": "rust dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "automerge": true
+    },
+    {
+      "description": "Group npm release-tooling updates",
+      "matchManagers": ["npm"],
+      "groupName": "release tooling",
+      "automerge": true
+    },
+    {
+      "description": "Automerge patch updates everywhere",
+      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge minor updates (repo auto-merge enabled)",
+      "matchUpdateTypes": ["minor"],
+      "automerge": true
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["before 6am on monday"]
+  }
+}

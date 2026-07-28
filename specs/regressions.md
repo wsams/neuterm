@@ -46,6 +46,11 @@ Agents: run through relevant items before merging behavior changes. Expand this 
 - [ ] Esc dismisses command help without changing the prompt line
 - [ ] Chat pane works when Ollama is down (shows error, terminal still works)
 
+## Input
+
+- [ ] Space bar inserts a space after commands (e.g. `echo "42"`, `for i in …`)
+- [ ] Space works in rename / command-help overlays
+
 ## Platform
 
 - [ ] Linux Wayland and X11 both start (where available)

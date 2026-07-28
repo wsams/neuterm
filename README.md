@@ -2,6 +2,10 @@
 
 Fast, configurable terminal emulator for Linux, macOS, and Windows.
 
+![NeuTerm screenshot](docs/screenshot.png)
+
+> **Status:** Nightly / automated releases from `main` are **pre-alpha** (`*-alpha` tags via semantic-release). Core terminal functionality (PTY, rendering, tabs, splits, config) is stabilizing, but expect breaking changes, incomplete features, and rough edges until a tagged stable release.
+
 Project specifications for contributors and agents live in [`specs/SPECS.md`](specs/SPECS.md).
 
 ## Quick start

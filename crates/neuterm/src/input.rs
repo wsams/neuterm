@@ -100,11 +100,23 @@ pub fn key_to_pty_bytes(event: &KeyEvent, mods: ModifiersState) -> Option<Vec<u8
         return None;
     }
 
-    match &event.logical_key {
+    key_to_pty_bytes_inner(&event.logical_key, event.text.as_deref(), mods)
+}
+
+/// Core PTY byte mapping. Separated so unit tests can cover Linux `NamedKey::Space`
+/// without constructing a full winit `KeyEvent` (its platform fields are crate-private).
+fn key_to_pty_bytes_inner(
+    logical_key: &Key,
+    text: Option<&str>,
+    mods: ModifiersState,
+) -> Option<Vec<u8>> {
+    match logical_key {
         Key::Named(NamedKey::Enter) => Some(b"\r".to_vec()),
         Key::Named(NamedKey::Backspace) => Some(b"\x7f".to_vec()),
         Key::Named(NamedKey::Tab) => Some(b"\t".to_vec()),
         Key::Named(NamedKey::Escape) => Some(b"\x1b".to_vec()),
+        // Linux/XKB reports Space as NamedKey::Space (not Character(" ")).
+        Key::Named(NamedKey::Space) => Some(b" ".to_vec()),
         Key::Named(NamedKey::ArrowUp) => Some(b"\x1b[A".to_vec()),
         Key::Named(NamedKey::ArrowDown) => Some(b"\x1b[B".to_vec()),
         Key::Named(NamedKey::ArrowRight) => Some(b"\x1b[C".to_vec()),
@@ -124,6 +136,46 @@ pub fn key_to_pty_bytes(event: &KeyEvent, mods: ModifiersState) -> Option<Vec<u8
             }
             Some(c.as_str().as_bytes().to_vec())
         }
-        _ => None,
+        // Prefer produced text for any remaining printable keys.
+        _ => text
+            .filter(|t| !t.is_empty())
+            .map(|t| t.as_bytes().to_vec()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use winit::keyboard::ModifiersState;
+
+    #[test]
+    fn space_named_key_sends_ascii_space() {
+        // Reproduces Linux/XKB: Space arrives as Named(Space), not Character(" ").
+        let bytes = key_to_pty_bytes_inner(
+            &Key::Named(NamedKey::Space),
+            Some(" "),
+            ModifiersState::empty(),
+        );
+        assert_eq!(bytes, Some(b" ".to_vec()));
+    }
+
+    #[test]
+    fn space_character_key_sends_ascii_space() {
+        let bytes = key_to_pty_bytes_inner(
+            &Key::Character(" ".into()),
+            Some(" "),
+            ModifiersState::empty(),
+        );
+        assert_eq!(bytes, Some(b" ".to_vec()));
+    }
+
+    #[test]
+    fn letter_still_reaches_pty() {
+        let bytes = key_to_pty_bytes_inner(
+            &Key::Character("e".into()),
+            Some("e"),
+            ModifiersState::empty(),
+        );
+        assert_eq!(bytes, Some(b"e".to_vec()));
     }
 }

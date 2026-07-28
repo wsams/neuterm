@@ -563,6 +563,14 @@ impl ApplicationHandler<AppEvent> for NeuTermApp {
                                 ov.input.pop();
                                 self.needs_redraw = true;
                             }
+                            Key::Named(NamedKey::Space)
+                                if !self.modifiers.control_key()
+                                    && !self.modifiers.super_key() =>
+                            {
+                                // Linux/XKB reports Space as NamedKey::Space.
+                                ov.input.push(' ');
+                                self.needs_redraw = true;
+                            }
                             Key::Character(c)
                                 if !self.modifiers.control_key()
                                     && !self.modifiers.super_key() =>
